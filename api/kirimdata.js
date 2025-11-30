@@ -14,7 +14,6 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-// Endpoint untuk kirim histori ke Firestore
 app.post("/api/kirimdata", async (req, res) => {
   try {
     console.log("Data diterima:", req.body);
@@ -27,7 +26,7 @@ app.post("/api/kirimdata", async (req, res) => {
       room,
       roomId,
       temperature,
-      timestamp,
+      timestamp,  // This should be passed as a string
       toboxId
     } = req.body;
 
@@ -36,6 +35,17 @@ app.post("/api/kirimdata", async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Semua field harus diisi"
+      });
+    }
+
+    // Convert timestamp string to Date object
+    const formattedTimestamp = new Date(timestamp);
+
+    // Check if the date is valid
+    if (isNaN(formattedTimestamp.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "Timestamp tidak valid"
       });
     }
 
@@ -48,7 +58,7 @@ app.post("/api/kirimdata", async (req, res) => {
       room,
       roomId,
       temperature: Number(temperature),
-      timestamp: new Date(timestamp),
+      timestamp: formattedTimestamp,  // Use the Date object
       toboxId
     });
 
