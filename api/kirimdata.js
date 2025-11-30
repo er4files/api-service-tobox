@@ -6,6 +6,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Ganti path ini dengan path file serviceAccountKey.json kamu
 const serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
 
 admin.initializeApp({
@@ -14,52 +15,32 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
+// Endpoint untuk kirim data histori ke Firestore
 app.post("/api/kirimdata", async (req, res) => {
   try {
     console.log("Data diterima:", req.body);
 
-    const {
-      acStatus,
-      companyId,
-      date,
-      humidity,
-      room,
-      roomId,
-      temperature,
-      timestamp,  // This should be passed as a string
-      toboxId
-    } = req.body;
+    const { acStatus, companyId, date, humidity, room, roomId, temperature, toboxId } = req.body;
 
-    // Validasi data
-    if (!acStatus || !companyId || !date || !humidity || !room || !roomId || !temperature || !timestamp || !toboxId) {
+    // Validasi input
+    if (!acStatus || !companyId || !date || humidity === undefined || !room || !roomId || temperature === undefined || !toboxId) {
       return res.status(400).json({
         success: false,
         message: "Semua field harus diisi"
       });
     }
 
-    // Convert timestamp string to Date object
-    const formattedTimestamp = new Date(timestamp);
-
-    // Check if the date is valid
-    if (isNaN(formattedTimestamp.getTime())) {
-      return res.status(400).json({
-        success: false,
-        message: "Timestamp tidak valid"
-      });
-    }
-
     // Kirim data ke Firestore
     await db.collection("history").add({
-      acStatus,
-      companyId,
-      date,
-      humidity,
-      room,
-      roomId,
-      temperature: Number(temperature),
-      timestamp: formattedTimestamp,  // Use the Date object
-      toboxId
+      acStatus: acStatus,
+      companyId: companyId,
+      date: date,
+      humidity: humidity,
+      room: room,
+      roomId: roomId,
+      temperature: temperature,
+      toboxId: toboxId,
+      timestamp: admin.firestore.FieldValue.serverTimestamp() // Menambahkan timestamp otomatis
     });
 
     return res.status(200).json({
