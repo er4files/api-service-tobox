@@ -15,28 +15,47 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-// Endpoint untuk kirim data suhu ke Firestore
+// Endpoint untuk kirim histori ke Firestore
 app.post("/api/kirimdata", async (req, res) => {
   try {
     console.log("Data diterima:", req.body);
 
-    const { suhu, timestamp } = req.body;
+    const {
+      acStatus,
+      companyId,
+      date,
+      humidity,
+      room,
+      roomId,
+      temperature,
+      timestamp,
+      toboxId
+    } = req.body;
 
-    if (!suhu || !timestamp) {
+    // Validasi data
+    if (!acStatus || !companyId || !date || !humidity || !room || !roomId || !temperature || !timestamp || !toboxId) {
       return res.status(400).json({
         success: false,
-        message: "Field 'suhu' dan 'timestamp' wajib diisi"
+        message: "Semua field harus diisi"
       });
     }
 
+    // Kirim data ke Firestore
     await db.collection("history").add({
-      suhu: Number(suhu),
-      timestamp: new Date(timestamp)
+      acStatus,
+      companyId,
+      date,
+      humidity,
+      room,
+      roomId,
+      temperature: Number(temperature),
+      timestamp: new Date(timestamp),
+      toboxId
     });
 
     return res.status(200).json({
       success: true,
-      message: "Data suhu berhasil dikirim ke Firestore"
+      message: "Data histori berhasil dikirim ke Firestore"
     });
   } catch (error) {
     console.error("Error mengirim data:", error);
